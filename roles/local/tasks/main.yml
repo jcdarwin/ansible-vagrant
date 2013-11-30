@@ -1,0 +1,6 @@
+---
+# file roles/local/tasks/main.yml
+
+- name: create user keypair(s)
+  local_action: shell /usr/bin/ssh-keygen -b 1024 -f {{ item }} -t rsa -N "" chdir={{ key_files }} creates={{ key_files }}/{{ item }}
+  with_items: users

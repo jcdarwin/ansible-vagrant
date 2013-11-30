@@ -1,0 +1,5 @@
+.*.swp
+.user_add
+.vagrant
+group_vars/_*
+.DS_Store

@@ -1,0 +1,16 @@
+[remote]
+web hostname=192.168.101.11 ansible_ssh_user=vagrant ansible_ssh_private_key_file=insecure_private_key
+db hostname=192.168.101.12 ansible_ssh_user=vagrant ansible_ssh_private_key_file=insecure_private_key
+
+[localhosts]
+127.0.0.1
+
+[webservers]
+web
+
+[dbservers]
+db
+
+[_remote]
+web
+db

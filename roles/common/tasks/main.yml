@@ -1,0 +1,83 @@
+---
+# file roles/common/tasks/main.yml
+
+- name: Create {{ group }} group
+  group: name={{ group }} state=present
+
+- action: shell whoami
+  register: whoami
+
+- name: update apt cache
+  apt: update_cache=yes cache_valid_time=3600
+  sudo: yes
+
+- name: upgrade the distro
+  apt: upgrade=yes
+  sudo: yes
+
+- name: install packages
+  apt: pkg={{ item }} state=latest
+  sudo: yes
+  with_items:
+    - build-essential
+    - git
+    - tree
+    - vim
+    - psmisc
+    - chkrootkit
+    - ufw
+    - nginx
+    - curl
+    - gnupg
+    - zip
+    - rsync
+    - wget
+    - unattended-upgrades
+
+- name: forbid SSH root login
+  sudo: yes
+  lineinfile: destfile=/etc/ssh/sshd_config regexp="^PermitRootLogin" line="PermitRootLogin no" state=present
+  notify:
+    - restart ssh
+
+- name: reset firewall
+  sudo: yes
+  action: shell ufw --force reset
+
+- name: allow firewall authorized ports
+  sudo: yes
+  action: shell ufw allow {{ item }} 
+  with_items:
+    - 22
+    - 80
+
+- name: enable firewall
+  sudo: yes
+  action: shell ufw --force enable
+
+# Users are locked if they do not have a password. This generates a random password for a user so SSH public key logins work.
+- name: Users | Generate password for example user
+  # shell: date | md5sum | cut -f1 -d' ' | tee /tmp/{{ item }}_README.txt
+  shell: date | md5sum | cut -f1 -d' '
+  register: make_password
+  with_items: users
+
+- name: create user(s)
+  user: name={{ item }} shell=/bin/bash group={{ group }} password=make_password.stdout
+  sudo: yes
+  with_items: users
+
+- name: debugging
+  debug: msg="PASSWORD is " . make_password.stdout
+  with_items: users
+
+#- name: Users | Create README.txt password file in home directory
+#  shell: mv /tmp/{{ item }}_README.txt /home/{{ item }}/README.txt
+#  sudo: yes
+#  with_items: users
+
+# Presumes we've already created the keys locally in {{ key_files }} by running ./localhost.sh
+- name: Pushing authorized key(s) to remote server(s)
+  action: authorized_key user={{ item }} key="$FILE({{ key_files }}/{{ item }}.pub)"
+  sudo: yes
+  with_items: users

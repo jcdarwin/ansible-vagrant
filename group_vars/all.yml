@@ -1,0 +1,6 @@
+key_files: /Users/jasondarwin/workspace/ansible-vagrant/.user_add/keys
+
+#users who get SSH access to these machines
+users: 
+    - jasondarwin
+    - testuser
