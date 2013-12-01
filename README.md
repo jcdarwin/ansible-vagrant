@@ -4,6 +4,8 @@
 
 	[http://docs.vagrantup.com/v2/getting-started/project_setup.html](http://docs.vagrantup.com/v2/getting-started/project_setup.html)
 
+	[http://julien.ponge.org/blog/scalable-and-understandable-provisioning-with-ansible-and-vagrant/](http://julien.ponge.org/blog/scalable-and-understandable-provisioning-with-ansible-and-vagrant/)
+
 	[http://blog.dhananjaynene.com/2013/10/hands-on-ansible-tutorial/](http://blog.dhananjaynene.com/2013/10/hands-on-ansible-tutorial/)
 
 	[http://www.stavros.io/posts/example-provisioning-and-deployment-ansible/](http://www.stavros.io/posts/example-provisioning-and-deployment-ansible/)
@@ -11,7 +13,9 @@
 	[http://www.stavros.io/posts/automated-large-scale-deployments-ansibles-pull-mo/](http://www.stavros.io/posts/automated-large-scale-deployments-ansibles-pull-mo/)
 
 	[http://lextoumbourou.com/blog/posts/getting-started-with-ansible/](http://lextoumbourou.com/blog/posts/getting-started-with-ansible/)
-	
+
+	[https://coderwall.com/p/lxchtg](https://coderwall.com/p/lxchtg)
+
 1. Install vagrant
 
 		$ mkdir /workspace/vagrant
@@ -50,8 +54,8 @@
 
 1. Start vagrant and SSH into it
 
-		$ vagrant up
-		$ vagrant ssh
+		$ vagrant up web
+		$ vagrant ssh web
 
 1. Enable a passwordless sudo, on both the machines
 
