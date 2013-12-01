@@ -1,3 +1,11 @@
+#What is this?
+
+A starter template for using [Ansible](https://github.com/ansible/ansible) and [Vagrant](http://www.vagrantup.com/).
+
+This template plus the notes below should be enough to get you up and running with a installation using Vagrant (for easy creation of VMs) and / or Ansible (for easy configuration management).
+
+The two together make creating and provisioning similar VMs easy!
+
 #Vagrant
 
 1. Read these first:
