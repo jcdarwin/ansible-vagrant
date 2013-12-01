@@ -6,6 +6,12 @@
 
 	[http://blog.dhananjaynene.com/2013/10/hands-on-ansible-tutorial/](http://blog.dhananjaynene.com/2013/10/hands-on-ansible-tutorial/)
 
+	[http://www.stavros.io/posts/example-provisioning-and-deployment-ansible/](http://www.stavros.io/posts/example-provisioning-and-deployment-ansible/)
+
+	[http://www.stavros.io/posts/automated-large-scale-deployments-ansibles-pull-mo/](http://www.stavros.io/posts/automated-large-scale-deployments-ansibles-pull-mo/)
+
+	[http://lextoumbourou.com/blog/posts/getting-started-with-ansible/](http://lextoumbourou.com/blog/posts/getting-started-with-ansible/)
+	
 1. Install vagrant
 
 		$ mkdir /workspace/vagrant
@@ -75,6 +81,8 @@
 
 		$ ansible -i hosts -a hostname web
 		$ ansible -i hosts -a "sudo ifconfig" web
+		$ ansible webservers -m command -a "uptime" -i hosts
+		$ ansible all -m ping -i hosts -l webservers
 
 1. Create our playbook files, as per those in this directory
 
@@ -95,6 +103,11 @@
 
 * To determine the port to ssh in on, start VirtualBox and examine Setings > Network > Port Forwarding 
 to find the Host Port that is mapped to a Guest Port of 22
+
+
+* To determine where Vagrant's keyfile has been created (where server name is suppied if this is a multi-server install):
+
+		$ vagrant ssh-config [server name] | grep IdentityFile  | awk '{print $2}'
 
 * To login using normal SSH 
 
