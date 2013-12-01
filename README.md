@@ -97,6 +97,7 @@ The two together make creating and provisioning similar VMs easy!
 		$ ansible all -m ping -i hosts -l webservers
 
 1. Create our playbook files, as per those in this directory
+Refer to the Ansible [best practices notes](http://www.ansibleworks.com/docs/playbooks_best_practices.html) regarding directory structure.
 
 1. Run ansible locally to create the key files
 
