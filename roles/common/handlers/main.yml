@@ -4,3 +4,7 @@
 - name: restart ssh
   sudo: yes
   action: service name=ssh state=restarted enabled=yes
+
+- name: restart apache
+  sudo: yes
+  service: name=apache2 state=restarted
