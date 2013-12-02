@@ -77,7 +77,7 @@
       owner=root group=root mode=0400
 
 - name: Users | Add user to sudoers
-  action: lineinfile dest=/etc/sudoers.d/custom regexp="{{ item }} ALL" line="{{ item }} ALL=(ALL) ALL" state=present
+  action: lineinfile dest=/etc/sudoers.d/custom line="{{ item }} ALL=(ALL) ALL" state=present
   with_items: users
 
 # Users are locked if they do not have a password. This generates a random password for a user so SSH public key logins work.
