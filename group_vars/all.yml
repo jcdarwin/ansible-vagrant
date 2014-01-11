@@ -4,3 +4,6 @@ key_files: /Users/jasondarwin/workspace/ansible-vagrant/.user_add/keys
 users: 
     - jasondarwin
     - testuser
+    - deploy
+
+user_groups: wheel,www-data,sudo

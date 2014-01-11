@@ -1,1 +1,3 @@
 group: wheel
+mysql_root_password: welcome
+mysql_administrator_password: welcome

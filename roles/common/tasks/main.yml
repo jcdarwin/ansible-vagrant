@@ -26,6 +26,14 @@
     - psmisc
     - chkrootkit
     - ufw
+    - apache2
+    - mysql-server
+    - mysql-client
+    - python-mysqldb
+    - php5
+    - php5-mysql
+    - php5-curl
+    - policykit-1
     - nginx
     - curl
     - gnupg
@@ -33,6 +41,10 @@
     - rsync
     - wget
     - unattended-upgrades
+
+- name: install PHP
+  apt: pkg=libapache2-mod-php5 state=present
+  notify: restart apache
 
 - name: forbid SSH root login
   sudo: yes
@@ -56,24 +68,76 @@
   action: shell ufw --force enable
 
 # ===============================================================
+# mysql: setup the mysql service
+# ===============================================================
+# 'localhost' needs to be the last item for idempotency, see
+# http://ansible.cc/docs/modules.html#mysql-user
+- name: determine whether .my.cnf exists
+  shell: ls -la ~/.my.cnf
+  ignore_errors: True
+  register: ls_my_cnf
+
+- name: copy .my.cnf file with empty root password credentials
+  template: src=.my.cnf.orig dest=/root/.my.cnf owner=root mode=0600
+  when: ls_my_cnf.stderr.find("cannot access") == 1
+
+- name: update mysql root password for all root accounts
+  mysql_user: name=root host={{ item }} password={{ mysql_root_password }} priv=*.*:ALL,GRANT
+  with_items:
+    - ansible_hostname
+    - 127.0.0.1
+    - ::1
+    - localhost
+
+- name: copy .my.cnf file with root password credentials
+  template: src=.my.cnf dest=/root/.my.cnf owner=root mode=0600
+
+- name: update mysql administrator password for all administrator accounts
+  mysql_user: name=administrator host={{ item }} password={{ mysql_administrator_password }} priv=*.*:ALL,GRANT
+  with_items:
+    - ansible_hostname
+    - 127.0.0.1
+    - ::1
+    - localhost
+
+- name: Setup MySQL
+  action: service name=mysql state=started
+
+# ===============================================================
 # Access, security and permissions
 # ===============================================================
 - name: Users | Write the sudoers file
   action: template src=templates/sudoers.j2 dest=/etc/sudoers.d/custom
       owner=root group=root mode=0400
 
+- name: Check that our sudoers file is valid
+  action: command visudo -c -f /etc/sudoers.d/custom
+
+- name: Delete tmp files
+  sudo: no
+  local_action: shell rm /tmp/*_README.txt
+  ignore_errors: True
+
+- name: Determine the existing users
+  shell: lastlog
+  register: existing_users
+
 # Users are locked if they do not have a password. This generates a random password for a user so SSH public key logins work.
-- name: Users | Generate password
-  shell: password="{{ lookup('password', '/tmp/' + item + '_README.txt length=12') }}"
+- name: Generate password
+  shell: password="{{ lookup('password', '/tmp/' + item + '_README.txt length=6 chars=ascii,numbers,digits') }}"
+  ignore_errors: True
+  when: existing_users.stdout.find("{{ item }}") == -1
   with_items: users
 
 - name: Users | Create user(s)
-  user: name={{ item }} shell=/bin/bash group={{ group }} password="{{ lookup('file', '/tmp/' + item + '_README.txt') }}"
+  user: name={{ item }} shell=/bin/bash group={{ group }} groups={{ user_groups }} password="{{ lookup('file', '/tmp/' + item + '_README.txt') }}"
   sudo: yes
+  when: existing_users.stdout.find("{{ item }}") == -1
   with_items: users
 
 - name: Users | Copy password to README.txt in users home directory
   copy: src=/tmp/{{ item }}_README.txt dest=/home/{{ item }}/README.txt owner={{ item }} group={{ group }} mode=0600
+  when: existing_users.stdout.find("{{ item }}") == -1
   with_items: users
 
 #- name: debugging
@@ -83,6 +147,7 @@
 - name: Users | Delete tmp files
   sudo: no
   local_action: shell rm /tmp/*_README.txt
+  ignore_errors: True
 
 # Presumes we've already created the keys locally in {{ key_files }} by running ./localhost.sh
 - name: Users | Pushing authorized key(s) to remote server(s)
