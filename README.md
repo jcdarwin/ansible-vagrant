@@ -104,6 +104,21 @@ Refer to the Ansible [best practices notes](http://www.ansibleworks.com/docs/pla
 		$ ./localhost.sh
 		# ansible-playbook -vvv -i hosts localhosts.yml --connection=local -K
 
+
+1. Ensure the localhost.yml file is configured correctly
+
+	1. If running under Windows
+		- hosts: localhosts
+		  #sudo: yes
+		  roles:
+		  - local
+
+	1. If running under normal OSes
+		- hosts: localhosts
+		  sudo: yes
+		  roles:
+		  - local
+
 1. Run ansible to provision the hosts
 
 		$ ansible-playbook -i hosts site.yml

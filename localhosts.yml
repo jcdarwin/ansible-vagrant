@@ -1,4 +1,4 @@
 - hosts: localhosts
-  sudo: yes
+  #sudo: yes
   roles:
   - local

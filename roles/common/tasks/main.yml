@@ -20,6 +20,11 @@
   sudo: yes
   with_items:
     - build-essential
+    - apache2
+    - mysql-server
+    - php5
+    - php5-mysql
+    - policykit-1
     - git
     - tree
     - vim
@@ -36,6 +41,7 @@
     - policykit-1
     - nginx
     - curl
+    - fail2ban
     - gnupg
     - zip
     - rsync
@@ -106,6 +112,10 @@
 # ===============================================================
 # Access, security and permissions
 # ===============================================================
+- name: Users | Determine the existing users
+  shell: lastlog
+  register: existing_users
+
 - name: Users | Write the sudoers file
   action: template src=templates/sudoers.j2 dest=/etc/sudoers.d/custom
       owner=root group=root mode=0400
@@ -127,6 +137,10 @@
   shell: password="{{ lookup('password', '/tmp/' + item + '_README.txt length=6 chars=ascii,numbers,digits') }}"
   ignore_errors: True
   when: existing_users.stdout.find("{{ item }}") == -1
+  with_items: users
+
+- name: Users | Add user to sudoers
+  action: lineinfile dest=/etc/sudoers.d/custom line="{{ item }} ALL=(ALL) ALL" state=present
   with_items: users
 
 - name: Users | Create user(s)
@@ -153,4 +167,5 @@
 - name: Users | Pushing authorized key(s) to remote server(s)
   action: authorized_key user={{ item }} key="$FILE({{ key_files }}/{{ item }}.pub)"
   sudo: yes
+  when: existing_users.stdout.find("{{ item }}") = -1
   with_items: users
