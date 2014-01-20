@@ -1,0 +1,63 @@
+---
+# file roles/users/tasks/main.yml
+
+# ===============================================================
+# Access, security and permissions
+# ===============================================================
+- name: Users | Determine the existing users
+  shell: lastlog
+  register: existing_users
+
+- name: Users | Write the sudoers file
+  action: template src=templates/sudoers.j2 dest=/etc/sudoers.d/custom
+      owner=root group=root mode=0400
+
+- name: Check that our sudoers file is valid
+  action: command visudo -c -f /etc/sudoers.d/custom
+
+- name: Delete tmp files
+  sudo: no
+  local_action: shell rm /tmp/*_README.txt
+  ignore_errors: True
+
+- name: Determine the existing users
+  shell: lastlog
+  register: existing_users
+
+# Users are locked if they do not have a password. This generates a random password for a user so SSH public key logins work.
+- name: Generate password
+  shell: password="{{ lookup('password', '/tmp/' + item + '_README.txt length=6 chars=ascii,numbers,digits') }}"
+  ignore_errors: True
+  when: existing_users.stdout.find("{{ item }}") == -1
+  with_items: users
+
+- name: Users | Add user to sudoers
+  action: lineinfile dest=/etc/sudoers.d/custom line="{{ item }} ALL=(ALL) ALL" state=present
+  with_items: users
+
+- name: Users | Create user(s)
+  user: name={{ item }} shell=/bin/bash group={{ group }} groups={{ user_groups }} password="{{ lookup('file', '/tmp/' + item + '_README.txt') }}"
+  sudo: yes
+  when: existing_users.stdout.find("{{ item }}") == -1
+  with_items: users
+
+- name: Users | Copy password to README.txt in users home directory
+  copy: src=/tmp/{{ item }}_README.txt dest=/home/{{ item }}/README.txt owner={{ item }} group={{ group }} mode=0600
+  when: existing_users.stdout.find("{{ item }}") == -1
+  with_items: users
+
+#- name: debugging
+#  debug: msg="PASSWORD is {{ lookup('file', '/tmp/' + item + '/README.txt') }}"
+#  with_items: users
+
+- name: Users | Delete tmp files
+  sudo: no
+  local_action: shell rm /tmp/*_README.txt
+  ignore_errors: True
+
+# Presumes we've already created the keys locally in {{ key_files }} by running ./localhost.sh
+- name: Users | Pushing authorized key(s) to remote server(s)
+  action: authorized_key user={{ item }} key="$FILE({{ key_files }}/{{ item }}.pub)"
+  sudo: yes
+  when: existing_users.stdout.find("{{ item }}") = -1
+  with_items: users
